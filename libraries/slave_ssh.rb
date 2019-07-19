@@ -102,19 +102,20 @@ class Chef
     #
     def launcher_groovy
       <<-EOH.gsub(/ ^{8}/, '')
-        #{credential_lookup_groovy('credentials')}
+        import hudson.plugins.sshslaves.verifiers.KnownHostsFileKeyVerificationStrategy;
         launcher =
           new hudson.plugins.sshslaves.SSHLauncher(
             #{convert_to_groovy(new_resource.host)},
             #{convert_to_groovy(new_resource.port)},
-            credentials,
+            #{convert_to_groovy(new_resource.parsed_credentials)},
             #{convert_to_groovy(new_resource.jvm_options)},
             #{convert_to_groovy(new_resource.java_path)},
             #{convert_to_groovy(new_resource.command_prefix)},
             #{convert_to_groovy(new_resource.command_suffix)},
             #{convert_to_groovy(new_resource.launch_timeout)},
             #{convert_to_groovy(new_resource.ssh_retries)},
-            #{convert_to_groovy(new_resource.ssh_wait_retries)}
+            #{convert_to_groovy(new_resource.ssh_wait_retries)},
+            new KnownHostsFileKeyVerificationStrategy()
           )
       EOH
     end
@@ -138,20 +139,6 @@ class Chef
       map[:credentials] = 'slave.launcher.credentialsId'
 
       map
-    end
-
-    #
-    # A Groovy snippet that will set the requested local Groovy variable
-    # to an instance of the credentials represented by
-    # `new_resource.parsed_credentials`.
-    #
-    # @param [String] groovy_variable_name
-    # @return [String]
-    #
-    def credential_lookup_groovy(groovy_variable_name = 'credentials_id')
-      <<-EOH.gsub(/ ^{10}/, '')
-        #{credentials_for_id_groovy(new_resource.parsed_credentials, groovy_variable_name)}
-      EOH
     end
   end
 end
